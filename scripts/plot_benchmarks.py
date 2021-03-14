@@ -60,10 +60,10 @@ if args.norm:
 
 
 plt.figure(figsize=fig_size)
-plt.barh(data["names"], data["cpu_t"])
+plt.grid(zorder=0)
+plt.barh(data["names"], data["cpu_t"], zorder=3)
 plt.xlabel("time, %s" % data["t_unit"])
 plt.tight_layout()
-plt.savefig(args.i.replace(".json", ".png"), dpi=300)
 plt.show()
 
 
