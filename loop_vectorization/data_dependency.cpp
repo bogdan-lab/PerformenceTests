@@ -1,19 +1,17 @@
-#include <vector>
+﻿#include <vector>
+#include <numeric>
 
-#define LS 3
-#define TYPE int
-
-TYPE f_no_dep(std::vector<TYPE> x){
-    TYPE sum = 0;
-    for(size_t i=0; i<x.size(); i++){
+int f_no_dep(std::vector<int> x){
+    int sum = 0;
+    for(size_t i=1; i<x.size()-1; i++){
         sum+=x[i];
     }
     return sum;
 }
 
 
-TYPE f_close_fwd(std::vector<TYPE> x){
-    TYPE sum = 0;
+int f_close_fwd(std::vector<int> x){
+    int sum = 0;
     for(size_t i=0; i<x.size()-1; i++){
         x[i] = (x[i] + x[i+1])/2;
         sum+=x[i];
@@ -21,8 +19,8 @@ TYPE f_close_fwd(std::vector<TYPE> x){
     return sum;
 }
 
-TYPE f_close_bwd(std::vector<TYPE> x){
-    TYPE sum = 0;
+int f_close_bwd(std::vector<int> x){
+    int sum = 0;
     for(size_t i=1; i<x.size(); i++){
         x[i] = (x[i-1]+x[i])/2;
         sum+=x[i];
@@ -30,9 +28,17 @@ TYPE f_close_bwd(std::vector<TYPE> x){
     return sum;
 }
 
+int f_close_bwd_SEP(std::vector<int> x){
+    for(size_t i=1; i<x.size(); i++){
+        x[i] = (x[i-1]+x[i])/2;
+    }
+    int sum = std::accumulate(x.begin(), x.end(), 0);
+    return sum;
+}
 
-TYPE f_far_fwd(std::vector<TYPE> x, size_t step){
-    TYPE sum = 0;
+
+int f_far_fwd(std::vector<int> x, size_t step){
+    int sum = 0;
     for(size_t i=0; i<x.size()-step; i++){
         x[i] = (x[i] + x[i+step])/2;
         sum+=x[i];
@@ -41,8 +47,8 @@ TYPE f_far_fwd(std::vector<TYPE> x, size_t step){
 }
 
 
-TYPE f_far_bwd(std::vector<TYPE> x, size_t step){
-    TYPE sum = 0;
+int f_far_bwd(std::vector<int> x, size_t step){
+    int sum = 0;
     for(size_t i=step; i<x.size(); i++){
         x[i] = (x[i-step]+x[i])/2;
         sum+=x[i];
