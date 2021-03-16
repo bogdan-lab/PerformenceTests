@@ -180,6 +180,40 @@ static void BM_ThroughRef(benchmark::State& state) {
 }
 
 
+static void BM_ThroughRefInl(benchmark::State& state) {
+    ConfigInl cfg{};
+    std::string str;
+    double d;
+    int64_t n;
+    size_t s;
+    for (auto _ : state) {
+        for(size_t i=0; i<state.range(0); i++){
+            const auto& lhs_ = cfg.GetInfo()->lhs_;
+            const auto& rhs_ = cfg.GetInfo()->rhs_;
+            benchmark::DoNotOptimize(str = lhs_.some_string_);
+            benchmark::DoNotOptimize(str = lhs_.another_string_);
+            benchmark::DoNotOptimize(d = lhs_.start_);
+            benchmark::DoNotOptimize(d = lhs_.end_);
+            benchmark::DoNotOptimize(d = lhs_.smth_);
+            benchmark::DoNotOptimize(n = lhs_.x_);
+            benchmark::DoNotOptimize(n = lhs_.y_);
+            benchmark::DoNotOptimize(n = lhs_.z_);
+            benchmark::DoNotOptimize(s = lhs_.id_);
+
+            benchmark::DoNotOptimize(str = rhs_.some_string_);
+            benchmark::DoNotOptimize(str = rhs_.another_string_);
+            benchmark::DoNotOptimize(d = rhs_.start_);
+            benchmark::DoNotOptimize(d = rhs_.end_);
+            benchmark::DoNotOptimize(d = rhs_.smth_);
+            benchmark::DoNotOptimize(n = rhs_.x_);
+            benchmark::DoNotOptimize(n = rhs_.y_);
+            benchmark::DoNotOptimize(n = rhs_.z_);
+            benchmark::DoNotOptimize(s = rhs_.id_);
+        }
+    }
+}
+
+
 
 
 
@@ -189,5 +223,6 @@ BENCHMARK(BM_FullPath)->Arg(ITER_NUM);
 BENCHMARK(BM_BufferSharedPtr)->Arg(ITER_NUM);
 BENCHMARK(BM_FullPathInl)->Arg(ITER_NUM);
 BENCHMARK(BM_ThroughRef)->Arg(ITER_NUM);
+BENCHMARK(BM_ThroughRefInl)->Arg(ITER_NUM);
 // Run the benchmark
 BENCHMARK_MAIN();
