@@ -27,6 +27,13 @@ add_executable(rbf_map
     main_map.cpp
 )
 
+add_executable(rbf_deq
+    main_deq.cpp
+)
+
+
+
 target_link_libraries(rbf_vec PRIVATE CONAN_PKG::benchmark)
 target_link_libraries(rbf_map PRIVATE CONAN_PKG::benchmark)
+target_link_libraries(rbf_deq PRIVATE CONAN_PKG::benchmark)
 
