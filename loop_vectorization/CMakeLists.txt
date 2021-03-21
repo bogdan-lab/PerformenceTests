@@ -16,11 +16,7 @@ conan_cmake_run(REQUIRES
         OPTIONS BASIC_SETUP CMAKE_TARGETS
         BUILD missing)
 
+add_subdirectory(dependency)
+add_subdirectory(counter)
     
-    
-add_executable(problem_1
-		data_dependency.cpp
-        data_dependency_bench.cpp)
-
-target_link_libraries(problem_1 PRIVATE CONAN_PKG::benchmark)
 
