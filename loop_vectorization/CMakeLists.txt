@@ -17,6 +17,6 @@ conan_cmake_run(REQUIRES
         BUILD missing)
 
 add_subdirectory(dependency)
-add_subdirectory(counter)
+add_subdirectory(func_call)
     
 

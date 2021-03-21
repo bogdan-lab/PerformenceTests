@@ -28,6 +28,16 @@ int f_close_bwd(std::vector<int> x){
     return sum;
 }
 
+int f_replace_one_val(std::vector<int> x){
+    std::vector<int> val;
+    val.reserve(x.size());
+    for(size_t i=1; i<x.size()-1; i++){
+        val.insert(val.begin(), (x[i-1]+x[i]+x[i+1])/3);
+    }
+    return val.back();
+
+}
+
 int f_close_bwd_SEP(std::vector<int> x){
     for(size_t i=1; i<x.size(); i++){
         x[i] = (x[i-1]+x[i])/2;
