@@ -18,5 +18,6 @@ conan_cmake_run(REQUIRES
 
 add_subdirectory(dependency)
 add_subdirectory(func_call)
-    
+add_subdirectory(multiple_exits)
+
 
