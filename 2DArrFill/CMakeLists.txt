@@ -22,7 +22,11 @@ add_executable(fill_2Darr
     main.cpp
 )
 
+add_executable(access
+    access.cpp
+)
 
 
 target_link_libraries(fill_2Darr PRIVATE CONAN_PKG::benchmark)
+target_link_libraries(access PRIVATE CONAN_PKG::benchmark)
 
