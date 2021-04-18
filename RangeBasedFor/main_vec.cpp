@@ -39,6 +39,7 @@ static void BM_ForEachVecInt(benchmark::State& state) {
     for (auto _ : state) {
         std::for_each(vec.begin(), vec.end(), [](int& el){el += 10;});
     }
+    benchmark::DoNotOptimize(vec);
 }
 
 
@@ -51,7 +52,35 @@ static void BM_RangeBasedVecInt(benchmark::State& state) {
             el += 10;
         }
     }
+    benchmark::DoNotOptimize(vec);
 }
+
+
+static void BM_DotSizeVecInt(benchmark::State& state) {
+    std::vector<int> vec(state.range(0));
+    std::uniform_int_distribution<int> dist(0, 100000);
+    std::generate(vec.begin(), vec.end(), [&](){return dist(rnd);});
+    for (auto _ : state) {
+        for(size_t i=0; i<vec.size(); i++) {
+            vec[i]+=10;
+        }
+    }
+    benchmark::DoNotOptimize(vec);
+}
+
+static void BM_DotSizeSavedVecInt(benchmark::State& state) {
+    std::vector<int> vec(state.range(0));
+    std::uniform_int_distribution<int> dist(0, 100000);
+    std::generate(vec.begin(), vec.end(), [&](){return dist(rnd);});
+    for (auto _ : state) {
+        size_t vec_size = vec.size();
+        for(size_t i=0; i<vec_size; i++) {
+            vec[i]+=10;
+        }
+    }
+    benchmark::DoNotOptimize(vec);
+}
+
 
 
 static void BM_ForEachVecStr(benchmark::State& state) {
@@ -60,6 +89,7 @@ static void BM_ForEachVecStr(benchmark::State& state) {
         std::for_each(vec.begin(), vec.end(), [](std::string& el){
             partition_i(el);});
     }
+    benchmark::DoNotOptimize(vec);
 }
 
 
@@ -70,6 +100,7 @@ static void BM_RangeBasedVecStr(benchmark::State& state) {
             partition_i(el);
         }
     }
+    benchmark::DoNotOptimize(vec);
 }
 
 
@@ -79,6 +110,8 @@ static void BM_RangeBasedVecStr(benchmark::State& state) {
 // Register the function as a benchmark
 BENCHMARK(BM_ForEachVecInt)->Arg(ELEMENT_NUM);
 BENCHMARK(BM_RangeBasedVecInt)->Arg(ELEMENT_NUM);
+BENCHMARK(BM_DotSizeVecInt)->Arg(ELEMENT_NUM);
+BENCHMARK(BM_DotSizeSavedVecInt)->Arg(ELEMENT_NUM);
 BENCHMARK(BM_ForEachVecStr)->Arg(ELEMENT_NUM);
 BENCHMARK(BM_RangeBasedVecStr)->Arg(ELEMENT_NUM);
 
