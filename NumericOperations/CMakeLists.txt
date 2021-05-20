@@ -18,10 +18,21 @@ conan_cmake_run(REQUIRES
 
 
 
-add_executable(num_ops
-    main.cpp
+add_executable(num_ops_in_vec
+    main_vec.cpp
 )
 
-target_compile_features(num_ops PRIVATE cxx_std_17)
-target_link_libraries(num_ops PRIVATE CONAN_PKG::benchmark)
-target_compile_options(num_ops PRIVATE -Wall -Werror -Wpedantic -fno-omit-frame-pointer)
+target_compile_features(num_ops_in_vec PRIVATE cxx_std_17)
+target_link_libraries(num_ops_in_vec PRIVATE CONAN_PKG::benchmark)
+#target_compile_options(num_ops_in_vec PRIVATE -Wall -Werror -Wpedantic -fno-omit-frame-pointer)
+
+
+
+add_executable( num_ops_bare
+    main_bare.cpp
+)
+
+target_compile_features(num_ops_bare PRIVATE cxx_std_17)
+target_link_libraries(num_ops_bare PRIVATE CONAN_PKG::benchmark)
+#target_compile_options(num_ops_bare PRIVATE -Wall -Werror -Wpedantic -fno-omit-frame-pointer)
+
