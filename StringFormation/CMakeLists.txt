@@ -24,6 +24,6 @@ add_executable(bench
 )
 
 
-
+target_compile_features(bench PRIVATE cxx_std_17)
 target_link_libraries(bench PRIVATE CONAN_PKG::benchmark CONAN_PKG::fmt)
 

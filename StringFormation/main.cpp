@@ -1,10 +1,12 @@
-﻿#include <iterator>
+﻿#include <benchmark/benchmark.h>
+#include <fmt/core.h>
+
+#include <iostream>
+#include <iterator>
 #include <random>
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include "benchmark/benchmark.h"
 
 #define ELEMENT_NUM 10000
 
@@ -84,13 +86,41 @@ static void BM_Plus(benchmark::State& state) {
   }
 }
 
-// sprintf
-// fmt
+static void BM_Sprintf(benchmark::State& state) {
+  std::vector<int> vec_int = generate_int(ELEMENT_NUM);
+  std::vector<double> vec_dbl = generate_double(ELEMENT_NUM);
+  std::vector<std::string> vec_string = generate_string(ELEMENT_NUM);
+  const size_t buff_size = 1024;
+  for (auto _ : state) {
+    for (size_t i = 0; i < ELEMENT_NUM; ++i) {
+      std::string res;
+      res.resize(buff_size);
+      std::snprintf(res.data(), buff_size, "%s %g %i\n", vec_string[i].c_str(),
+                    vec_dbl[i], vec_int[i]);
+      benchmark::DoNotOptimize(res);
+    }
+  }
+}
+
+static void BM_Format(benchmark::State& state) {
+  std::vector<int> vec_int = generate_int(ELEMENT_NUM);
+  std::vector<double> vec_dbl = generate_double(ELEMENT_NUM);
+  std::vector<std::string> vec_string = generate_string(ELEMENT_NUM);
+  for (auto _ : state) {
+    for (size_t i = 0; i < ELEMENT_NUM; ++i) {
+      std::string res =
+          fmt::format("{} {} {}\n", vec_string[i], vec_dbl[i], vec_int[i]);
+      benchmark::DoNotOptimize(res);
+    }
+  }
+}
 
 // Register the function as a benchmark
 BENCHMARK(BM_StringStream);
 BENCHMARK(BM_Append);
 BENCHMARK(BM_Plus);
+BENCHMARK(BM_Sprintf);
+BENCHMARK(BM_Format);
 
 // Run the benchmark
 BENCHMARK_MAIN();
