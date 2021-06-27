@@ -1,6 +1,7 @@
 ﻿#include <benchmark/benchmark.h>
 #include <fmt/core.h>
 
+#include <ctime>
 #include <iostream>
 #include <iterator>
 #include <random>
@@ -8,110 +9,107 @@
 #include <string>
 #include <vector>
 
-#define ELEMENT_NUM 10000
-
-std::vector<double> generate_double(size_t n) {
-  std::vector<double> vec;
-  vec.reserve(n);
-  std::mt19937 rnd(42);
+double generate_double() {
+  std::mt19937 rnd(time(0));
   std::uniform_real_distribution<double> dbl_dist{-6.0e9, 6.0e9};
-  std::generate_n(std::back_inserter(vec), n, [&]() { return dbl_dist(rnd); });
-  return vec;
+  return dbl_dist(rnd);
 }
 
-std::vector<int> generate_int(size_t n) {
-  std::vector<int> vec;
-  vec.reserve(n);
-  std::mt19937 rnd(42);
+int generate_int() {
+  std::mt19937 rnd(time(0));
   std::uniform_int_distribution<int> int_dist{-1000, 1000};
-  std::generate_n(std::back_inserter(vec), n, [&]() { return int_dist(rnd); });
-  return vec;
+  return int_dist(rnd);
 }
 
-std::vector<std::string> generate_string(size_t n, size_t length = 50) {
-  std::vector<std::string> vec(n);
-  std::mt19937 rnd(42);
+std::string generate_string(size_t length = 50) {
+  std::string res;
+  std::mt19937 rnd(time(0));
   std::uniform_int_distribution<uint8_t> char_dist{65, 125};
-  for (auto& el : vec) {
-    el.reserve(length);
-    for (size_t i = 0; i < length; ++i) {
-      el.push_back(static_cast<char>(char_dist(rnd)));
-    }
+  for (size_t i = 0; i < length; ++i) {
+    res.push_back(static_cast<char>(char_dist(rnd)));
   }
-  return vec;
+  return res;
+}
+
+std::string FormatStrinStream(const std::string& str, int val_int,
+                              double val_dbl) {
+  std::stringstream ss;
+  ss << str << " " << val_dbl << " " << val_int << "\n";
+  return ss.str();
 }
 
 static void BM_StringStream(benchmark::State& state) {
-  std::vector<int> vec_int = generate_int(ELEMENT_NUM);
-  std::vector<double> vec_dbl = generate_double(ELEMENT_NUM);
-  std::vector<std::string> vec_string = generate_string(ELEMENT_NUM);
+  int val_int = generate_int();
+  double val_dbl = generate_double();
+  std::string str = generate_string();
   for (auto _ : state) {
-    for (size_t i = 0; i < ELEMENT_NUM; ++i) {
-      std::stringstream ss;
-      ss << vec_string[i] << " " << vec_dbl[i] << " " << vec_int[i] << "\n";
-      std::string res = ss.str();
-      benchmark::DoNotOptimize(res);
-    }
+    std::string res = FormatStrinStream(str, val_int, val_dbl);
+    benchmark::DoNotOptimize(res);
   }
+}
+
+std::string FormatAppend(const std::string& str, int val_int, double val_dbl) {
+  std::string res;
+  return res.append(str)
+      .append(" ")
+      .append(std::to_string(val_dbl))
+      .append(" ")
+      .append(std::to_string(val_int))
+      .append("\n");
 }
 
 static void BM_Append(benchmark::State& state) {
-  std::vector<int> vec_int = generate_int(ELEMENT_NUM);
-  std::vector<double> vec_dbl = generate_double(ELEMENT_NUM);
-  std::vector<std::string> vec_string = generate_string(ELEMENT_NUM);
+  int val_int = generate_int();
+  double val_dbl = generate_double();
+  std::string str = generate_string();
   for (auto _ : state) {
-    for (size_t i = 0; i < ELEMENT_NUM; ++i) {
-      std::string res;
-      res.append(vec_string[i])
-          .append(" ")
-          .append(std::to_string(vec_dbl[i]))
-          .append(" ")
-          .append(std::to_string(vec_int[i]))
-          .append("\n");
-      benchmark::DoNotOptimize(res);
-    }
+    std::string res = FormatAppend(str, val_int, val_dbl);
+    benchmark::DoNotOptimize(res);
   }
+}
+
+std::string FormatPlus(const std::string& str, int val_int, double val_dbl) {
+  return str + " " + std::to_string(val_dbl) + " " + std::to_string(val_int) +
+         "\n";
 }
 
 static void BM_Plus(benchmark::State& state) {
-  std::vector<int> vec_int = generate_int(ELEMENT_NUM);
-  std::vector<double> vec_dbl = generate_double(ELEMENT_NUM);
-  std::vector<std::string> vec_string = generate_string(ELEMENT_NUM);
+  int val_int = generate_int();
+  double val_dbl = generate_double();
+  std::string str = generate_string();
   for (auto _ : state) {
-    for (size_t i = 0; i < ELEMENT_NUM; ++i) {
-      std::string res = vec_string[i] + " " + std::to_string(vec_dbl[i]) + " " +
-                        std::to_string(vec_int[i]) + "\n";
-      benchmark::DoNotOptimize(res);
-    }
+    std::string res = FormatPlus(str, val_int, val_dbl);
+    benchmark::DoNotOptimize(res);
   }
 }
 
-static void BM_Sprintf(benchmark::State& state) {
-  std::vector<int> vec_int = generate_int(ELEMENT_NUM);
-  std::vector<double> vec_dbl = generate_double(ELEMENT_NUM);
-  std::vector<std::string> vec_string = generate_string(ELEMENT_NUM);
+std::string FormatSprintf(const std::string& str, int val_int, double val_dbl) {
   const size_t buff_size = 1024;
+  std::string res;
+  res.resize(buff_size);
+  std::snprintf(res.data(), buff_size, "%s %g %i\n", str.c_str(), val_dbl,
+                val_int);
+  return res;
+}
+
+static void BM_Sprintf(benchmark::State& state) {
+  int val_int = generate_int();
+  double val_dbl = generate_double();
+  std::string str = generate_string();
   for (auto _ : state) {
-    for (size_t i = 0; i < ELEMENT_NUM; ++i) {
-      std::string res;
-      res.resize(buff_size);
-      std::snprintf(res.data(), buff_size, "%s %g %i\n", vec_string[i].c_str(),
-                    vec_dbl[i], vec_int[i]);
-      benchmark::DoNotOptimize(res);
-    }
+    std::string res = FormatSprintf(str, val_int, val_dbl);
+
+    benchmark::DoNotOptimize(res);
   }
 }
 
 static void BM_Format(benchmark::State& state) {
-  std::vector<int> vec_int = generate_int(ELEMENT_NUM);
-  std::vector<double> vec_dbl = generate_double(ELEMENT_NUM);
-  std::vector<std::string> vec_string = generate_string(ELEMENT_NUM);
+  int val_int = generate_int();
+  double val_dbl = generate_double();
+  std::string str = generate_string();
   for (auto _ : state) {
-    for (size_t i = 0; i < ELEMENT_NUM; ++i) {
-      std::string res =
-          fmt::format("{} {} {}\n", vec_string[i], vec_dbl[i], vec_int[i]);
-      benchmark::DoNotOptimize(res);
-    }
+    std::string res = fmt::format("{} {} {}\n", str, val_dbl, val_int);
+    benchmark::DoNotOptimize(res);
   }
 }
 
