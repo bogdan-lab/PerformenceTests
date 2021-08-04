@@ -33,6 +33,7 @@ class LoggerSeparateFlush {
 
   template <typename ValueType>
   LoggerSeparateFlush& operator<<(ValueType value) {
+    std::lock_guard<std::mutex> lock{save_mutex_};
     fout_ << value;
     return *this;
   }
