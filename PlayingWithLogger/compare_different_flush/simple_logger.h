@@ -11,8 +11,11 @@ class SimpleLogger {
  public:
   SimpleLogger() = delete;
   SimpleLogger(const std::string& fname) : fout_(fname) {}
-  void LogLine(const std::string& line) { fout_ << line << '\n'; }
-  std::ofstream& AccessFout() { return fout_; }
+  template <typename ValueType>
+  SimpleLogger& operator<<(ValueType value) {
+    fout_ << value;
+    return *this;
+  }
 };
 
 #endif  // SIMPLE_LOGGER_H

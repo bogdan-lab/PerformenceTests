@@ -78,15 +78,18 @@ void DoGLogTest(size_t log_num, size_t test_num) {
   for (size_t i = 0; i < test_num; ++i) {
     glog_res.push_back(LogGLog(log_num));
   }
+  std::vector<int> tmp;
+  CHECK_NOTNULL(nullptr);
+  std::cout << tmp[0];
   double glog_avg = get_avg(glog_res);
   double glog_std = get_std(glog_res, glog_avg);
   std::cout << "GLOG = " << glog_avg << "ms +- " << glog_std << "ms\n";
 }
 
 int main(int argc, char* argv[]) {
-  const size_t log_num = 1'000'000;
+  const size_t log_num = 1'000;
   const size_t test_num = 50;
-  DoSpdLogTest(log_num, test_num);
-  DoGLogTest(log_num, test_num);
+  // DoSpdLogTest(log_num, test_num);
+  DoGLogTest(log_num, 1);
   return 0;
 }

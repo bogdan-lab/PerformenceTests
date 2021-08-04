@@ -1,77 +1,78 @@
 ﻿#include <chrono>
 #include <iostream>
 
+#include "buff_acc_threading.h"
 #include "separated_flush.h"
 #include "simple_logger.h"
 
 #define STRINGS_NUM 1'000'000'0
 
-std::string get_next_string() {
+const char* get_next_string() {
   return "55;23311;DISH;2008-01-03 09:30:00;2008-01-03 "
-         "09:30:00;1143856;26.2107;26.2271;18691.6;-1.14386e+06;MKT;1";
+         "09:30:00;1143856;26.2107;26.2271;18691.6;-1.14386e+06;MKT;1\n";
 }
 
 class TimeMeasure {
   std::string message_;
-  const std::chrono::time_point<std::chrono::system_clock> start_;
-  std::chrono::time_point<std::chrono::system_clock> end_;
+  const std::chrono::time_point<std::chrono::steady_clock> start_;
 
  public:
   TimeMeasure(std::string msg)
-      : message_(std::move(msg)), start_(std::chrono::system_clock::now()) {}
+      : message_(std::move(msg)), start_(std::chrono::steady_clock::now()) {}
 
   ~TimeMeasure() {
-    end_ = std::chrono::system_clock::now();
-    std::cout << message_ << " : "
-              << std::chrono::duration_cast<std::chrono::microseconds>(end_ -
-                                                                       start_)
-                     .count()
-              << "us\n";
+    std::chrono::microseconds res =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now() - start_);
+    std::cout << message_ << " : \t" << res.count() << "us\n";
   }
 };
 
-int main() {
-  /*
-    {
-      TimeMeasure tm("Separate flush");
-      LoggerSeparateFlush sep_log("sep_log.txt");
-      for (size_t i = 0; i < STRINGS_NUM; i++) {
-        sep_log.LogLine(get_next_string());
-      }
-    }
+template <typename Logger>
+void TestFullString(Logger& log, std::string logger_name) {
+  TimeMeasure tm("Test full string " + std::move(logger_name));
+  for (size_t i = 0; i < STRINGS_NUM; i++) {
+    log << get_next_string();
+  }
+}
 
-    {
-      TimeMeasure tm("Simple flush");
-      SimpleLogger smp_log("smp_log.txt");
-      for (size_t i = 0; i < STRINGS_NUM; i++) {
-        smp_log.LogLine(get_next_string());
-      }
-    }
-  */
+template <typename Logger>
+void TestPartialStrings(Logger& log, std::string logger_name) {
+  TimeMeasure tm("Test partial string " + std::move(logger_name));
+  for (size_t i = 0; i < STRINGS_NUM; i++) {
+    log << 55 << ';' << 23311 << ';' << "DISH" << ';' << "2008-01-03 09:30:00"
+        << ';' << "2008-01-03 09:30:00" << ';' << 1143856 << ';' << ';'
+        << 26.2107 << ';' << 26.2271 << ';' << 18691.6 << ';' << -1.14386e+06
+        << ';' << "MKT" << ';' << 1 << '\n';
+  }
+}
+
+int main() {
   {
-    TimeMeasure tm("Separate flush");
-    LoggerSeparateFlush sep_log("sep_log_partial.txt");
-    for (size_t i = 0; i < STRINGS_NUM; i++) {
-      sep_log.AccessFout() << 55 << ';' << 23311 << ';' << "DISH" << ';'
-                           << "2008-01-03 09:30:00" << ';'
-                           << "2008-01-03 09:30:00" << ';' << 1143856 << ';'
-                           << ';' << 26.2107 << ';' << 26.2271 << ';' << 18691.6
-                           << ';' << -1.14386e+06 << ';' << "MKT" << ';' << 1
-                           << '\n';
-    }
+    SimpleLogger smp_log("smp_log_1.txt");
+    TestFullString(smp_log, "Simple log");
+  }
+  {
+    LoggerSeparateFlush sep_log("sep_log_1.txt");
+    TestFullString(sep_log, "Separate flush");
   }
 
   {
-    TimeMeasure tm("Simple flush");
-    SimpleLogger smp_log("smp_log_partial.txt");
-    for (size_t i = 0; i < STRINGS_NUM; i++) {
-      smp_log.AccessFout() << 55 << ';' << 23311 << ';' << "DISH" << ';'
-                           << "2008-01-03 09:30:00" << ';'
-                           << "2008-01-03 09:30:00" << ';' << 1143856 << ';'
-                           << ';' << 26.2107 << ';' << 26.2271 << ';' << 18691.6
-                           << ';' << -1.14386e+06 << ';' << "MKT" << ';' << 1
-                           << '\n';
-    }
+    FastFile ff{"fast_file_1.txt"};
+    TestFullString(ff, "Fast file");
+  }
+  {
+    SimpleLogger smp_log("smp_log_2.txt");
+    TestPartialStrings(smp_log, "Simple log");
+  }
+  {
+    LoggerSeparateFlush sep_log("sep_log_2.txt");
+    TestPartialStrings(sep_log, "Separate flush");
+  }
+
+  {
+    FastFile ff{"fast_file_2.txt"};
+    TestPartialStrings(ff, "Fast file");
   }
   return 0;
 }

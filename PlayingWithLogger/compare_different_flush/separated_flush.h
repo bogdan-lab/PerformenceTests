@@ -13,7 +13,7 @@ class LoggerSeparateFlush {
   std::thread flush_thread_;
   std::mutex save_mutex_;
   std::ofstream fout_;
-  bool run_flag_;
+  std::atomic<bool> run_flag_;
 
  public:
   LoggerSeparateFlush() = delete;
@@ -31,9 +31,11 @@ class LoggerSeparateFlush {
     });
   }
 
-  // TODO without mutex operation creates race condition!!!! fix it
-  void LogLine(const std::string& line) { fout_ << line << '\n'; }
-  std::ofstream& AccessFout() { return fout_; }
+  template <typename ValueType>
+  LoggerSeparateFlush& operator<<(ValueType value) {
+    fout_ << value;
+    return *this;
+  }
 
   ~LoggerSeparateFlush() {
     run_flag_ = false;
