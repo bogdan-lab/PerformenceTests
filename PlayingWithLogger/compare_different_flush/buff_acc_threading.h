@@ -10,8 +10,8 @@
 
 class FastFile {
  private:
-  std::chrono::milliseconds flush_period_{200};
   std::ofstream fout_;
+  std::chrono::milliseconds flush_period_;
   std::vector<std::string> buffer_;
   std::vector<std::string> accumulator_;
   std::mutex flush_mtx_;
@@ -26,7 +26,8 @@ class FastFile {
   }
 
  public:
-  FastFile(const std::string& fname) : fout_(fname) {
+  FastFile(const std::string& fname, std::chrono::milliseconds period)
+      : fout_(fname), flush_period_(period) {
     if (!fout_.is_open()) {
       // DO SOMETHING!!!!
     }
