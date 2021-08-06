@@ -56,22 +56,6 @@ class FastFile {
     return *this;
   }
 
-  template <typename ValueType>
-  FastFile& operator<<(ValueType value) {
-    std::lock_guard<std::mutex> lk{flush_mtx_};
-    accumulator_.push_back(std::to_string(value));
-    return *this;
-  }
-  FastFile& operator<<(const char* value) {
-    std::lock_guard<std::mutex> lk{flush_mtx_};
-    accumulator_.emplace_back(value);
-    return *this;
-  }
-  FastFile& operator<<(char value) {
-    std::lock_guard<std::mutex> lk{flush_mtx_};
-    accumulator_.emplace_back(1, value);
-    return *this;
-  }
   FastFile& operator<<(std::string value) {
     std::lock_guard<std::mutex> lk{flush_mtx_};
     accumulator_.push_back(std::move(value));

@@ -6,17 +6,10 @@
 #include "buff_acc_threading.h"
 #include "separated_flush.h"
 
-#define STRINGS_NUM 1'000'00
+#define STRINGS_NUM 1'000'000
 
-constexpr auto kFlushPeriod = std::chrono::milliseconds{20};
-constexpr auto kDataIncomePeriod = std::chrono::milliseconds{1};
-
-int64_t wait(std::mt19937& rnd, int t_min, int t_max) {
-  auto wait_time = std::chrono::milliseconds{kDataIncomePeriod};
-  std::this_thread::sleep_for(wait_time);
-  std::uniform_int_distribution<int> dist{t_min, t_max};
-  return dist(rnd);
-}
+constexpr auto kFlushPeriod = std::chrono::milliseconds{1000};
+constexpr auto kDataIncomePeriod = std::chrono::microseconds{1};
 
 std::string get_next_string() {
   return "55;23311;DISH;2008-01-03 09:30:00;2008-01-03 "
@@ -39,51 +32,27 @@ class TimeMeasure {
 };
 
 template <typename Logger>
-void TestFullString(Logger& log, std::string logger_name) {
-  TimeMeasure tm("Test full string " + std::move(logger_name));
-  for (size_t i = 0; i < STRINGS_NUM; i++) {
-    log << get_next_string();
-  }
-}
-
-template <typename Logger>
-int64_t BusyLog(Logger& log, std::string logger_name) {
+void BusyLog(Logger& log, std::string logger_name) {
   TimeMeasure tm("Busy log test" + std::move(logger_name));
-  std::mt19937 rnd{42};
-  int64_t sum = 0;
   for (size_t i = 0; i < STRINGS_NUM; i++) {
-    sum += wait(rnd, 0, 2);
+    std::this_thread::sleep_for(kDataIncomePeriod);
     log << get_next_string();
-  }
-  return sum;
-}
-
-template <typename Logger>
-void TestPartialStrings(Logger& log, std::string logger_name) {
-  TimeMeasure tm("Test partial string " + std::move(logger_name));
-  for (size_t i = 0; i < STRINGS_NUM; i++) {
-    log << 55 << ';' << 23311 << ';' << "DISH" << ';' << "2008-01-03 09:30:00"
-        << ';' << "2008-01-03 09:30:00"
-        << "MKT" << ';' << 1 << '\n';
   }
 }
 
 int main() {
-  /*{
+  {
     std::ofstream smp_log{"smp_log_busy.txt"};
-    auto x = BusyLog(smp_log, "Simple log");
-    std::cout << "SUM = " << x << '\n';
-  }*/
+    BusyLog(smp_log, "Simple log");
+  }
   {
     LoggerSeparateFlush sep_log("sep_log_busy.txt", kFlushPeriod);
-    auto x = BusyLog(sep_log, "Separate flush");
-    std::cout << "SUM = " << x << '\n';
+    BusyLog(sep_log, "Separate flush");
   }
 
   {
     FastFile ff{"fast_file_busy.txt", kFlushPeriod};
-    auto x = BusyLog(ff, "Fast file");
-    std::cout << "SUM = " << x << '\n';
+    BusyLog(ff, "Fast file");
   }
   return 0;
 }
