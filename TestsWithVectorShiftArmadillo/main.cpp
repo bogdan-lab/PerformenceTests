@@ -5,18 +5,6 @@
 #include <random>
 #include <vector>
 
-// class SimpleCycleVector {
-// public:
-//  SimpleCycleVector(const arma::vec& input) : data_(input) {}
-//
-//  void Shift();
-//
-//  const arma::vec& GetData() const { return data_; }
-//
-// private:
-//  arma::vec data_;
-//};
-
 arma::vec GenerateVector(size_t size) {
   std::mt19937 rnd;
   std::uniform_real_distribution<double> dist{
@@ -29,7 +17,7 @@ arma::vec GenerateVector(size_t size) {
 }
 
 arma::vec RotateAndConvert(std::vector<double>& vec, size_t num) {
-  std::rotate(vec.begin(), vec.begin() + vec.size() - num, vec.end());
+  std::rotate(vec.begin(), vec.begin() + num, vec.end());
   return arma::conv_to<arma::vec>::from(vec);
 }
 
@@ -46,7 +34,7 @@ static void BMStdVecRotateNoConversion(benchmark::State& state) {
   auto test =
       arma::conv_to<std::vector<double>>::from(GenerateVector(state.range(0)));
   for (auto _ : state) {
-    std::rotate(test.begin(), test.begin() + test.size() - 1, test.end());
+    std::rotate(test.begin(), test.begin() + 1, test.end());
     benchmark::DoNotOptimize(test);
   }
 }
@@ -54,7 +42,7 @@ static void BMStdVecRotateNoConversion(benchmark::State& state) {
 static void BMArmadilloShift(benchmark::State& state) {
   arma::vec test = GenerateVector(state.range(0));
   for (auto _ : state) {
-    test = arma::shift(test, 1);
+    test = arma::shift(test, -1);
     benchmark::DoNotOptimize(test);
   }
 }
@@ -62,10 +50,40 @@ static void BMArmadilloShift(benchmark::State& state) {
 static void BMStdRotateArmaVecInplace(benchmark::State& state) {
   arma::vec test = GenerateVector(state.range(0));
   for (auto _ : state) {
-    std::rotate(test.begin(), test.begin() + test.size() - 1, test.end());
+    std::rotate(test.begin(), test.begin() + 1, test.end());
     benchmark::DoNotOptimize(test);
   }
 }
+
+// ============================== SECOND PART ===============================
+
+// TODO Test how will you fill such vector (Prev())
+// What will happen if I rotate more than one circle?
+class SimpleCycleVector {
+ public:
+  SimpleCycleVector(const arma::vec& input) : data_(input) {}
+
+  const arma::vec& GetData() {
+    Flatten();
+    return data_;
+  }
+
+  void ShiftToLeft() { curr_begin_ = Next(curr_begin_); }
+
+ private:
+  size_t Next(size_t curr_idx) const {
+    curr_idx++;
+    return curr_idx >= data_.size() ? 0 : curr_idx;
+  }
+
+  void Flatten() {
+    std::rotate(data_.begin(), data_.begin() + curr_begin_, data_end());
+    curr_begin_ = 0;
+  }
+
+  arma::vec data_;
+  size_t curr_begin_ = 0;
+};
 
 BENCHMARK(BMArmadilloShift)->DenseRange(10, 300, 50);
 BENCHMARK(BMStdRotateArmaVecInplace)->DenseRange(10, 300, 50);
