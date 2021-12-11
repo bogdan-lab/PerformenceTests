@@ -18,11 +18,16 @@ conan_cmake_run(REQUIRES
 
 
 
-add_executable(bench
-    main.cpp
+add_executable(shift_bench
+   shift_bench.cpp
 )
 
+add_executable(general
+    shift_write_get_bench.cpp
+    )
 
-target_compile_features(bench PRIVATE cxx_std_17)
-target_link_libraries(bench PRIVATE CONAN_PKG::benchmark)
+target_compile_features(shift_bench PRIVATE cxx_std_17)
+target_compile_features(general PRIVATE cxx_std_17)
+target_link_libraries(shift_bench PRIVATE CONAN_PKG::benchmark)
+target_link_libraries(general PRIVATE CONAN_PKG::benchmark)
 

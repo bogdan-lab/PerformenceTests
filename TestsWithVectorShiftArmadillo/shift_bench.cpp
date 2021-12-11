@@ -6,7 +6,7 @@
 #include <vector>
 
 arma::vec GenerateVector(size_t size) {
-  std::mt19937 rnd;
+  std::mt19937 rnd(size);
   std::uniform_real_distribution<double> dist{
       std::numeric_limits<double>::min(), std::numeric_limits<double>::max()};
   arma::vec result(size);
@@ -21,7 +21,7 @@ arma::vec RotateAndConvert(std::vector<double>& vec, size_t num) {
   return arma::conv_to<arma::vec>::from(vec);
 }
 
-static void BMStdVecRotateWithConversion(benchmark::State& state) {
+static void BM_StdVecRotateWithConversion(benchmark::State& state) {
   auto test =
       arma::conv_to<std::vector<double>>::from(GenerateVector(state.range(0)));
   for (auto _ : state) {
@@ -30,7 +30,7 @@ static void BMStdVecRotateWithConversion(benchmark::State& state) {
   }
 }
 
-static void BMStdVecRotateNoConversion(benchmark::State& state) {
+static void BM_StdVecRotateNoConversion(benchmark::State& state) {
   auto test =
       arma::conv_to<std::vector<double>>::from(GenerateVector(state.range(0)));
   for (auto _ : state) {
@@ -39,7 +39,7 @@ static void BMStdVecRotateNoConversion(benchmark::State& state) {
   }
 }
 
-static void BMArmadilloShift(benchmark::State& state) {
+static void BM_ArmadilloShift(benchmark::State& state) {
   arma::vec test = GenerateVector(state.range(0));
   for (auto _ : state) {
     test = arma::shift(test, -1);
@@ -47,7 +47,7 @@ static void BMArmadilloShift(benchmark::State& state) {
   }
 }
 
-static void BMStdRotateArmaVecInplace(benchmark::State& state) {
+static void BM_StdRotateArmaVecInplace(benchmark::State& state) {
   arma::vec test = GenerateVector(state.range(0));
   for (auto _ : state) {
     std::rotate(test.begin(), test.begin() + 1, test.end());
@@ -55,40 +55,9 @@ static void BMStdRotateArmaVecInplace(benchmark::State& state) {
   }
 }
 
-// ============================== SECOND PART ===============================
+BENCHMARK(BM_ArmadilloShift)->DenseRange(10, 300, 50);
+BENCHMARK(BM_StdRotateArmaVecInplace)->DenseRange(10, 300, 50);
+BENCHMARK(BM_StdVecRotateNoConversion)->DenseRange(10, 300, 50);
+BENCHMARK(BM_StdVecRotateWithConversion)->DenseRange(10, 300, 50);
 
-// TODO Test how will you fill such vector (Prev())
-// What will happen if I rotate more than one circle?
-class SimpleCycleVector {
- public:
-  SimpleCycleVector(const arma::vec& input) : data_(input) {}
-
-  const arma::vec& GetData() {
-    Flatten();
-    return data_;
-  }
-
-  void ShiftToLeft() { curr_begin_ = Next(curr_begin_); }
-
- private:
-  size_t Next(size_t curr_idx) const {
-    curr_idx++;
-    return curr_idx >= data_.size() ? 0 : curr_idx;
-  }
-
-  void Flatten() {
-    std::rotate(data_.begin(), data_.begin() + curr_begin_, data_end());
-    curr_begin_ = 0;
-  }
-
-  arma::vec data_;
-  size_t curr_begin_ = 0;
-};
-
-BENCHMARK(BMArmadilloShift)->DenseRange(10, 300, 50);
-BENCHMARK(BMStdRotateArmaVecInplace)->DenseRange(10, 300, 50);
-BENCHMARK(BMStdVecRotateNoConversion)->DenseRange(10, 300, 50);
-BENCHMARK(BMStdVecRotateWithConversion)->DenseRange(10, 300, 50);
-
-// Run the benchmark
 BENCHMARK_MAIN();
