@@ -24,7 +24,9 @@ add_executable(shift_bench
 
 add_executable(general
     shift_write_get_bench.cpp
-    )
+)
+
+target_compile_options( general PRIVATE -fno-omit-frame-pointer)
 
 target_compile_features(shift_bench PRIVATE cxx_std_17)
 target_compile_features(general PRIVATE cxx_std_17)

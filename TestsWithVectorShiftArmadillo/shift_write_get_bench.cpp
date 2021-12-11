@@ -17,6 +17,10 @@ class Current {
 
   const arma::vec& GetData() const { return data_; }
 
+  double HackGetElement(uint64_t idx) const {
+    return data_[idx % data_.size()];
+  }
+
  private:
   arma::vec data_;
 };
@@ -32,6 +36,10 @@ class InPlaceShift {
   }
 
   const arma::vec& GetData() const { return data_; }
+
+  double HackGetElement(uint64_t idx) const {
+    return data_[idx % data_.size()];
+  }
 
  private:
   arma::vec data_;
@@ -50,6 +58,10 @@ class ShiftOnDemand {
   const arma::vec& GetData() {
     Flatten();
     return data_;
+  }
+
+  double HackGetElement(uint64_t idx) const {
+    return data_[idx % data_.size()];
   }
 
  private:
@@ -75,15 +87,19 @@ static void BM_Current(benchmark::State& state) {
   std::generate(input.begin(), input.end(), [&]() { return dist(rnd); });
 
   Current latest_bars(std::move(input));
-
+  uint64_t request_count = state.range(1) > state.range(0)
+                               ? std::numeric_limits<uint64_t>::max()
+                               : state.range(1);
   uint64_t index = 1;
   for (auto _ : state) {
-    latest_bars.ShiftAndWrite(dist(rnd));
-    if (!(index % state.range(1))) {
+    latest_bars.ShiftAndWrite(latest_bars.HackGetElement(index));
+    if (!(index % request_count)) {
       double x = latest_bars.GetData()[0];
       benchmark::DoNotOptimize(x);
     }
   }
+  double x = latest_bars.GetData()[0];
+  benchmark::DoNotOptimize(x);
 }
 
 static void BM_InPlaceShift(benchmark::State& state) {
@@ -95,14 +111,19 @@ static void BM_InPlaceShift(benchmark::State& state) {
 
   InPlaceShift latest_bars(std::move(input));
 
+  uint64_t request_count = state.range(1) > state.range(0)
+                               ? std::numeric_limits<uint64_t>::max()
+                               : state.range(1);
   uint64_t index = 1;
   for (auto _ : state) {
-    latest_bars.ShiftAndWrite(dist(rnd));
-    if (!(index % state.range(1))) {
+    latest_bars.ShiftAndWrite(latest_bars.HackGetElement(index));
+    if (!(index % request_count)) {
       double x = latest_bars.GetData()[0];
       benchmark::DoNotOptimize(x);
     }
   }
+  double x = latest_bars.GetData()[0];
+  benchmark::DoNotOptimize(x);
 }
 
 static void BM_ShiftOnDemand(benchmark::State& state) {
@@ -114,18 +135,24 @@ static void BM_ShiftOnDemand(benchmark::State& state) {
 
   ShiftOnDemand latest_bars(std::move(input));
 
+  uint64_t request_count = state.range(1) > state.range(0)
+                               ? std::numeric_limits<uint64_t>::max()
+                               : state.range(1);
   uint64_t index = 1;
   for (auto _ : state) {
-    latest_bars.ShiftAndWrite(dist(rnd));
-    if (!(index % state.range(1))) {
+    latest_bars.ShiftAndWrite(latest_bars.HackGetElement(index));
+    if (!(index % request_count)) {
       double x = latest_bars.GetData()[0];
       benchmark::DoNotOptimize(x);
     }
   }
+  double x = latest_bars.GetData()[0];
+  benchmark::DoNotOptimize(x);
 }
 
-BENCHMARK(BM_Current)->ArgsProduct({{50, 100, 200}, {1, 5, 10, 1000}});
-BENCHMARK(BM_InPlaceShift)->ArgsProduct({{50, 100, 200}, {1, 5, 10, 1000}});
-BENCHMARK(BM_ShiftOnDemand)->ArgsProduct({{50, 100, 200}, {1, 5, 10, 1000}});
+BENCHMARK(BM_RndBaseline);
+BENCHMARK(BM_Current)->ArgsProduct({{50, 100, 200}, {1, 2, 5, 1000}});
+BENCHMARK(BM_InPlaceShift)->ArgsProduct({{50, 100, 200}, {1, 2, 5, 1000}});
+BENCHMARK(BM_ShiftOnDemand)->ArgsProduct({{50, 100, 200}, {1, 2, 5, 1000}});
 
 BENCHMARK_MAIN();
