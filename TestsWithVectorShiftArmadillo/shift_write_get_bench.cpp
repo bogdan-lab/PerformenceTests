@@ -15,7 +15,7 @@ class Current {
     data_.back() = val;
   }
 
-  const arma::vec& GetData() const { return data_; }
+  arma::vec& GetData() { return data_; }
 
   double HackGetElement(uint64_t idx) const {
     return data_[idx % data_.size()];
@@ -35,7 +35,7 @@ class InPlaceShift {
     data_.back() = val;
   }
 
-  const arma::vec& GetData() const { return data_; }
+  arma::vec& GetData() { return data_; }
 
   double HackGetElement(uint64_t idx) const {
     return data_[idx % data_.size()];
@@ -55,7 +55,7 @@ class ShiftOnDemand {
     begin_idx_ = Next(begin_idx_);
   }
 
-  const arma::vec& GetData() {
+  arma::vec& GetData() {
     Flatten();
     return data_;
   }
@@ -94,12 +94,10 @@ static void BM_Current(benchmark::State& state) {
   for (auto _ : state) {
     latest_bars.ShiftAndWrite(latest_bars.HackGetElement(index));
     if (!(index % request_count)) {
-      double x = latest_bars.GetData()[0];
-      benchmark::DoNotOptimize(x);
+      benchmark::DoNotOptimize(latest_bars.GetData());
     }
+    ++index;
   }
-  double x = latest_bars.GetData()[0];
-  benchmark::DoNotOptimize(x);
 }
 
 static void BM_InPlaceShift(benchmark::State& state) {
@@ -118,12 +116,10 @@ static void BM_InPlaceShift(benchmark::State& state) {
   for (auto _ : state) {
     latest_bars.ShiftAndWrite(latest_bars.HackGetElement(index));
     if (!(index % request_count)) {
-      double x = latest_bars.GetData()[0];
-      benchmark::DoNotOptimize(x);
+      benchmark::DoNotOptimize(latest_bars.GetData());
     }
+    ++index;
   }
-  double x = latest_bars.GetData()[0];
-  benchmark::DoNotOptimize(x);
 }
 
 static void BM_ShiftOnDemand(benchmark::State& state) {
@@ -142,15 +138,12 @@ static void BM_ShiftOnDemand(benchmark::State& state) {
   for (auto _ : state) {
     latest_bars.ShiftAndWrite(latest_bars.HackGetElement(index));
     if (!(index % request_count)) {
-      double x = latest_bars.GetData()[0];
-      benchmark::DoNotOptimize(x);
+      benchmark::DoNotOptimize(latest_bars.GetData());
     }
+    ++index;
   }
-  double x = latest_bars.GetData()[0];
-  benchmark::DoNotOptimize(x);
 }
 
-BENCHMARK(BM_RndBaseline);
 BENCHMARK(BM_Current)->ArgsProduct({{50, 100, 200}, {1, 2, 5, 1000}});
 BENCHMARK(BM_InPlaceShift)->ArgsProduct({{50, 100, 200}, {1, 2, 5, 1000}});
 BENCHMARK(BM_ShiftOnDemand)->ArgsProduct({{50, 100, 200}, {1, 2, 5, 1000}});
