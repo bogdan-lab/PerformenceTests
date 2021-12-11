@@ -22,14 +22,17 @@ add_executable(shift_bench
    shift_bench.cpp
 )
 
+add_executable(rotate_bench
+    rotate_bench.cpp
+)
+
 add_executable(general
     shift_write_get_bench.cpp
 )
 
 target_compile_options( general PRIVATE -fno-omit-frame-pointer)
 
-target_compile_features(shift_bench PRIVATE cxx_std_17)
-target_compile_features(general PRIVATE cxx_std_17)
 target_link_libraries(shift_bench PRIVATE CONAN_PKG::benchmark)
+target_link_libraries(rotate_bench PRIVATE CONAN_PKG::benchmark)
 target_link_libraries(general PRIVATE CONAN_PKG::benchmark)
 
