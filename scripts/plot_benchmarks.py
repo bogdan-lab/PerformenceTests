@@ -5,57 +5,47 @@ import numpy as np
 import re
 
 
-def check_name(name, regex):
-    if len(regex) == 0:
-        return True
-    if re.findall(regex, name):
-        return True
-    return False
-
-
 def read_info(fname, regex):
-    f = open(fname, "r")
-    json_data = json.load(f)
-    f.close()
-    data = {}
-    data["names"] = []
-    data["cpu_t"] = []
-    data["real_t"] = []
-    data["t_unit"] = json_data["benchmarks"][0]["time_unit"]
+    regex = re.compile(regex)
+    with open(fname, "r") as f:
+        json_data = json.load(f)
+    data = {"names": [], "cpu_time": []}
+    all_time_units = set()
     for b_mark in json_data["benchmarks"]:
-        if check_name(b_mark["name"], regex):
+        if regex.search(b_mark["name"]):
             data["names"].append(b_mark["name"])
-            data["cpu_t"].append(b_mark["cpu_time"])
-            data["real_t"].append(b_mark["real_time"])
-    data["cpu_t"] = np.array(data["cpu_t"])
-    data["real_t"] = np.array(data["real_t"])
+            data["cpu_time"].append(b_mark["cpu_time"])
+            all_time_units.add(b_mark["time_unit"])
+    data["cpu_time"] = np.array(data["cpu_time"])
+    if len(all_time_units) > 1:
+        raise RuntimeError("There are different time units in the file")
+    data["time_unit"] = all_time_units.pop()
     return data
 
 
 def setup_parser(parser):
-    parser.add_argument('-i', "--input", default="results.json",
+    parser.add_argument('-i', "--input", default="results.json", type=str,
                         help="input json file with results")
     parser.add_argument("--norm", action="store_true", default=False,
                         help="Sets whether graph should be plotted using "
                         "normalized times or not")
-    parser.add_argument("--figsize", action="store", default="7 4",
-                        help="Setting resultin figure size")
-    parser.add_argument("--filter", action="store", default="",
+    parser.add_argument("--figsize", action="store", type=str, default="7 4",
+                        help="Setting resulting figure size")
+    parser.add_argument("--filter", action="store", default=".*", type=str,
                         help="Python regex for filtering which data to plot")
 
 
 def plot_data(data, args):
     if args.norm:
-        data["cpu_t"] = data["cpu_t"]/min(data["cpu_t"])
-        data["real_t"] = data["real_t"]/min(data["real_t"])
-        data["t_unit"] = "a.u."
+        data["cpu_time"] = data["cpu_time"]/min(data["cpu_time"])
+        data["time_unit"] = "a.u."
     fig_size = args.figsize.split()
     fig_size[0] = int(fig_size[0])
     fig_size[1] = int(fig_size[1])
     plt.figure(figsize=fig_size)
     plt.grid(zorder=0)
-    plt.barh(data["names"], data["cpu_t"], zorder=3)
-    plt.xlabel("time, %s" % data["t_unit"])
+    plt.barh(data["names"], data["cpu_time"], zorder=3)
+    plt.xlabel(f"time, {data['time_unit']}")
     plt.tight_layout()
     plt.show()
 
