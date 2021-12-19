@@ -3,20 +3,25 @@ import argparse
 import json
 import numpy as np
 import re
+from collections import defaultdict
 
 
 def read_info(fname, regex):
     regex = re.compile(regex)
     with open(fname, "r") as f:
         json_data = json.load(f)
-    data = {"names": [], "cpu_time": []}
+    data = {"benchmarks": defaultdict(lambda: defaultdict(list))}
     all_time_units = set()
     for b_mark in json_data["benchmarks"]:
         if regex.search(b_mark["name"]):
-            data["names"].append(b_mark["name"])
-            data["cpu_time"].append(b_mark["cpu_time"])
+            group_name = b_mark["name"].split('/')[0]
+            data["benchmarks"][group_name]["names"].append(b_mark["name"])
+            data["benchmarks"][group_name]["cpu_time"].append(
+                    b_mark["cpu_time"])
             all_time_units.add(b_mark["time_unit"])
-    data["cpu_time"] = np.array(data["cpu_time"])
+    for k in data["benchmarks"]:
+        data["benchmarks"][k]["cpu_time"] = np.array(
+                data["benchmarks"][k]["cpu_time"])
     if len(all_time_units) > 1:
         raise RuntimeError("There are different time units in the file")
     data["time_unit"] = all_time_units.pop()
@@ -35,16 +40,22 @@ def setup_parser(parser):
                         help="Python regex for filtering which data to plot")
 
 
+def normalize_times(data):
+    min_val = np.inf
+    for key, val in data["benchmarks"].items():
+        min_val = min(min_val, min(val["cpu_time"]))
+    for k in data["benchmarks"]:
+        data["benchmarks"][k]["cpu_time"]/min_val
+    data["time_unit"] = "a. u."
+
+
 def plot_data(data, args):
     if args.norm:
-        data["cpu_time"] = data["cpu_time"]/min(data["cpu_time"])
-        data["time_unit"] = "a.u."
-    fig_size = args.figsize.split()
-    fig_size[0] = int(fig_size[0])
-    fig_size[1] = int(fig_size[1])
-    plt.figure(figsize=fig_size)
+        normalize_times(data)
+    plt.figure(figsize=[int(val) for val in args.figsize.split()])
     plt.grid(zorder=0)
-    plt.barh(data["names"], data["cpu_time"], zorder=3)
+    for key, val in data["benchmarks"].items():
+        plt.barh(val["names"], val["cpu_time"], zorder=3)
     plt.xlabel(f"time, {data['time_unit']}")
     plt.tight_layout()
     plt.show()
