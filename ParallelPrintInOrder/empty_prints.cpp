@@ -1,6 +1,8 @@
 ﻿#include <benchmark/benchmark.h>
 
 #include <condition_variable>
+#include <functional>
+#include <future>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -100,11 +102,31 @@ static void BM_DoubleMutexThread(benchmark::State& state) {
   }
 }
 
-BENCHMARK(BM_ConVarThread)->Range(10, 10 << 10);
-BENCHMARK(BM_DoubleMutexThread)->Range(10, 10 << 10);
+static void BM_ConVarAsync(benchmark::State& state) {
+  for (auto _ : state) {
+    FooBarCV test(state.range(0));
+    auto lhs = std::async(std::launch::async, &FooBarCV::foo, std::ref(test));
+    auto rhs = std::async(std::launch::async, &FooBarCV::bar, std::ref(test));
+    lhs.get();
+    rhs.get();
+    benchmark::DoNotOptimize(test.GetData());
+  }
+}
 
-// TODO what is semaphore?
-// TODO try multithread realization va=ia std::async
-// TODO try what happens, when we have tasks, which takesome time - sounds
-// stupid, anyway because of the strict order of execution current task will
-// have to operate sequentially!
+static void BM_DoubleMutexAsync(benchmark::State& state) {
+  for (auto _ : state) {
+    FooBarDoubleMutex test(state.range(0));
+    auto lhs =
+        std::async(std::launch::async, &FooBarDoubleMutex::foo, std::ref(test));
+    auto rhs =
+        std::async(std::launch::async, &FooBarDoubleMutex::bar, std::ref(test));
+    lhs.get();
+    rhs.get();
+    benchmark::DoNotOptimize(test.GetData());
+  }
+}
+
+BENCHMARK(BM_ConVarThread)->Range(10, 10 << 10);
+BENCHMARK(BM_ConVarAsync)->Range(10, 10 << 10);
+BENCHMARK(BM_DoubleMutexThread)->Range(10, 10 << 10);
+BENCHMARK(BM_DoubleMutexAsync)->Range(10, 10 << 10);
