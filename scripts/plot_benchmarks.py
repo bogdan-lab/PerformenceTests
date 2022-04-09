@@ -5,23 +5,19 @@ import numpy as np
 import re
 from collections import defaultdict
 
+TIME_MULTIPLIERS = {"ns": 1, "us": 1e3, "ms": 1e6, "s": 1e9}
 
-def read_info(fname, regex):
+
+def read_info(fname, regex, time_name):
     regex = re.compile(regex)
     with open(fname, "r") as f:
         json_data = json.load(f)
     data = []
-    all_time_units = set()
     for b_mark in json_data["benchmarks"]:
         if regex.search(b_mark["name"]):
             data.append(
                     {"name": b_mark["name"],
-                     "cpu_time": b_mark["cpu_time"],
-                     "time_unit": b_mark["time_unit"]}
-                    )
-            all_time_units.add(b_mark["time_unit"])
-    if len(all_time_units) > 1:
-        raise RuntimeError("There are different time units in the file")
+                     "time": b_mark[time_name] * TIME_MULTIPLIERS[b_mark["time_unit"]]})
     return data
 
 
@@ -31,6 +27,9 @@ def setup_parser(parser):
     parser.add_argument("--norm", action="store_true", default=False,
                         help="Sets whether graph should be plotted using "
                         "normalized times or not")
+    parser.add_argument("--time_name", action="store", default="cpu_time",
+                        choices=["cpu_time", "real_time"],
+                        help="Indicates which time column will be used for plotting graphs")
     parser.add_argument("--figsize", action="store", type=str, default="7 4",
                         help="Setting resulting figure size")
     parser.add_argument("--filter", action="store", default=".*", type=str,
@@ -38,12 +37,9 @@ def setup_parser(parser):
 
 
 def normalize_times(data):
-    min_val = np.inf
-    for el in data:
-        min_val = min(min_val, el["cpu_time"])
+    min_val = min(el["time"] for el in data)
     for i in range(len(data)):
-        data[i]["cpu_time"] /= min_val
-        data[i]["time_unit"] = "a.u."
+        data[i]["time"] /= min_val
 
 
 def get_group_name(name, index):
@@ -71,19 +67,21 @@ def group_data(data):
     for el in data:
         group_name = get_group_name(el["name"], sep_idx)
         result[group_name]["names"].append(el["name"])
-        result[group_name]["cpu_time"].append(el["cpu_time"])
+        result[group_name]["time"].append(el["time"])
     return result
 
 
 def plot_data(data, args):
+    time_unit = "ns"
     if args.norm:
         normalize_times(data)
+        time_unit = "a.u."
     groups = group_data(data)
     plt.figure(figsize=[int(val) for val in args.figsize.split()])
     plt.grid(zorder=0)
     for key, val in groups.items():
-        plt.barh(val["names"], val["cpu_time"], zorder=3)
-    plt.xlabel(f"time, {data[0]['time_unit']}")
+        plt.barh(val["names"], val["time"], zorder=3)
+    plt.xlabel(f"time, {time_unit}")
     plt.tight_layout()
     plt.show()
 
@@ -97,5 +95,5 @@ if __name__ == "__main__":
             )
     setup_parser(parser)
     args = parser.parse_args()
-    data = read_info(args.input, args.filter)
+    data = read_info(args.input, args.filter, args.time_name)
     plot_data(data, args)
