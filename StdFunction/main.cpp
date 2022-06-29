@@ -79,7 +79,26 @@ static void StdFunction(benchmark::State& state) {
   }
 }
 
+template <typename Callback>
+void TemplateCall(uint64_t& lhs, uint64_t& rhs, Callback check_func) {
+  if (check_func(rhs, lhs)) {
+    // benchmark::DoNotOptimize(lhs);
+    // benchmark::DoNotOptimize(rhs);
+    std::swap(lhs, rhs);
+  }
+}
+
+static void Template(benchmark::State& state) {
+  std::vector<uint64_t> data = GenerateData(1000);
+  for (auto _ : state) {
+    for (size_t i = 1; i < data.size(); ++i) {
+      TemplateCall(data[i - 1], data[i], std::less<uint64_t>());
+    }
+  }
+}
+
 BENCHMARK(Baseline);
 BENCHMARK(StdFunction);
 BENCHMARK(FunctionPtr);
 BENCHMARK(OutsideFunctionPtr);
+BENCHMARK(Template);
