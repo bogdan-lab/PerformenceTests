@@ -130,3 +130,5 @@ BENCHMARK(BM_ConVarThread)->Range(10, 10 << 10);
 BENCHMARK(BM_ConVarAsync)->Range(10, 10 << 10);
 BENCHMARK(BM_DoubleMutexThread)->Range(10, 10 << 10);
 BENCHMARK(BM_DoubleMutexAsync)->Range(10, 10 << 10);
+
+BENCHMARK_MAIN();

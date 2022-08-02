@@ -1,29 +1,8 @@
-﻿cmake_minimum_required(VERSION 3.10)
-
-project(StringFormation
-	LANGUAGES CXX)
-
-
-#CONAN
-find_program(CONAN conan)
-if (NOT CONAN)
-    message(FATAL_ERROR "Needs conan package manager: please visit https://conan.io and install")
-endif ()
-include(../cmake/conan.cmake)
-conan_check(VERSION 1.14.4 REQUIRED)
-conan_cmake_run(REQUIRES
-                benchmark/1.5.2
-                fmt/7.1.2
-        OPTIONS BASIC_SETUP CMAKE_TARGETS
-        BUILD missing)
-
-
-
-add_executable(bench
+﻿add_executable(string_formation
     main.cpp
 )
 
 
-target_compile_features(bench PRIVATE cxx_std_17)
-target_link_libraries(bench PRIVATE CONAN_PKG::benchmark CONAN_PKG::fmt)
+target_compile_features(string_formation PRIVATE cxx_std_17)
+target_link_libraries(string_formation PRIVATE benchmark::benchmark)
 

@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(PerformanceTests LANGUAGES CXX)
+
+find_package(benchmark REQUIRED)
+
+add_subdirectory(MultiChannelMerge)
+add_subdirectory(2DArrFill)
+add_subdirectory(LoopVectorization)
+add_subdirectory(EstimateMapDestructor)
+add_subdirectory(MethodThroughAccess)
+add_subdirectory(NanOptCompare)
+add_subdirectory(NumericOperations)
+add_subdirectory(ParallelWriteInOrder)
+add_subdirectory(RangeBasedFor)
+add_subdirectory(StdFunction)
+add_subdirectory(StringFormation)
+add_subdirectory(TryCatchTest)
+add_subdirectory(TestingPartition)
+add_subdirectory(TestsWithVectorShiftArmadillo)
+

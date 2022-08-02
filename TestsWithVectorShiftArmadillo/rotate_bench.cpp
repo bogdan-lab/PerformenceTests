@@ -37,3 +37,5 @@ BENCHMARK(BM_RotateArmadilloLeft)
     ->ArgsProduct({{50, 100, 200}, {1, 2, 5, 10, 20}});
 BENCHMARK(BM_RotateArmadilloRight)
     ->ArgsProduct({{50, 100, 200}, {1, 2, 5, 10, 20}});
+
+BENCHMARK_MAIN();

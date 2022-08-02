@@ -102,3 +102,5 @@ BENCHMARK(StdFunction);
 BENCHMARK(FunctionPtr);
 BENCHMARK(OutsideFunctionPtr);
 BENCHMARK(Template);
+
+BENCHMARK_MAIN();

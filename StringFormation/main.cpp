@@ -1,5 +1,5 @@
 ﻿#include <benchmark/benchmark.h>
-#include <fmt/core.h>
+//#include <fmt/core.h>
 
 #include <ctime>
 #include <iostream>
@@ -103,22 +103,22 @@ static void BM_Sprintf(benchmark::State& state) {
   }
 }
 
-static void BM_Format(benchmark::State& state) {
-  int val_int = generate_int();
-  double val_dbl = generate_double();
-  std::string str = generate_string();
-  for (auto _ : state) {
-    std::string res = fmt::format("{} {} {}\n", str, val_dbl, val_int);
-    benchmark::DoNotOptimize(res);
-  }
-}
+// static void BM_Format(benchmark::State& state) {
+//  int val_int = generate_int();
+//  double val_dbl = generate_double();
+//  std::string str = generate_string();
+//  for (auto _ : state) {
+//    std::string res = fmt::format("{} {} {}\n", str, val_dbl, val_int);
+//    benchmark::DoNotOptimize(res);
+//  }
+//}
 
 // Register the function as a benchmark
 BENCHMARK(BM_StringStream);
 BENCHMARK(BM_Append);
 BENCHMARK(BM_Plus);
 BENCHMARK(BM_Sprintf);
-BENCHMARK(BM_Format);
+// BENCHMARK(BM_Format);
 
 // Run the benchmark
 BENCHMARK_MAIN();

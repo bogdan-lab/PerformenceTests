@@ -143,3 +143,5 @@ BENCHMARK(BM_ConVarThread)->ArgsProduct({{100, 1000}, {1, 5}});
 BENCHMARK(BM_ConVarAsync)->ArgsProduct({{100, 1000}, {1, 5}});
 BENCHMARK(BM_DoubleMutexThread)->ArgsProduct({{100, 1000}, {1, 5}});
 BENCHMARK(BM_DoubleMutexAsync)->ArgsProduct({{100, 1000}, {1, 5}});
+
+BENCHMARK_MAIN();
