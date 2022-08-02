@@ -7,23 +7,7 @@
 #include <utility>
 
 #include "benchmark/benchmark.h"
-
-std::vector<std::queue<double>> GenerateSources(int src_num, int src_len) {
-  std::mt19937 rnd(std::time(nullptr));
-  std::uniform_real_distribution<double> dist(0.0, 1.0);
-  std::vector<std::queue<double>> result;
-  result.reserve(src_num);
-  while (src_num--) {
-    std::vector<double> buff(src_len);
-    std::generate(buff.begin(), buff.end(), [&]() { return dist(rnd); });
-    std::sort(buff.begin(), buff.end());
-    result.emplace_back();
-    for (const auto& el : buff) {
-      result.back().push(el);
-    }
-  }
-  return result;
-}
+#include "source_generator.h"
 
 struct SetComparator {
   bool operator()(const std::queue<double>* lhs,
@@ -55,19 +39,21 @@ std::vector<double> SolveUsingSet(std::vector<std::queue<double>>& data) {
 
 static void GenerateSourceBM(benchmark::State& state) {
   for (auto _ : state) {
-    auto sources =
-        GenerateSources(/*src_num=*/state.range(0), /*src_len=*/state.range(1));
-    benchmark::DoNotOptimize(sources);
+    std::vector<std::queue<double>> sources;
+    benchmark::DoNotOptimize(sources =
+                                 GenerateSources(/*src_num=*/state.range(0),
+                                                 /*src_len=*/state.range(1)));
   }
 }
 
 static void SetSolutionBM(benchmark::State& state) {
   for (auto _ : state) {
-    auto sources =
-        GenerateSources(/*src_num=*/state.range(0), /*src_len=*/state.range(1));
-    benchmark::DoNotOptimize(sources);
-    std::vector<double> res = SolveUsingSet(sources);
-    benchmark::DoNotOptimize(res);
+    std::vector<std::queue<double>> sources;
+    benchmark::DoNotOptimize(sources =
+                                 GenerateSources(/*src_num=*/state.range(0),
+                                                 /*src_len=*/state.range(1)));
+    std::vector<double> res;
+    benchmark::DoNotOptimize(res = SolveUsingSet(sources));
   }
 }
 
@@ -103,11 +89,12 @@ std::vector<double> SolveUsingHeap(std::vector<std::queue<double>>& data) {
 
 static void HeapSolutionBM(benchmark::State& state) {
   for (auto _ : state) {
-    auto sources =
-        GenerateSources(/*src_num=*/state.range(0), /*src_len=*/state.range(1));
-    benchmark::DoNotOptimize(sources);
-    std::vector<double> res = SolveUsingHeap(sources);
-    benchmark::DoNotOptimize(res);
+    std::vector<std::queue<double>> sources;
+    benchmark::DoNotOptimize(sources =
+                                 GenerateSources(/*src_num=*/state.range(0),
+                                                 /*src_len=*/state.range(1)));
+    std::vector<double> res;
+    benchmark::DoNotOptimize(res = SolveUsingHeap(sources));
   }
 }
 
@@ -141,22 +128,61 @@ std::vector<double> SolveUsingSortedVector(
 
 static void SortVectorSolutionBM(benchmark::State& state) {
   for (auto _ : state) {
-    auto sources =
-        GenerateSources(/*src_num=*/state.range(0), /*src_len=*/state.range(1));
-    benchmark::DoNotOptimize(sources);
-    std::vector<double> res = SolveUsingSortedVector(sources);
-    benchmark::DoNotOptimize(res);
+    std::vector<std::queue<double>> sources;
+    benchmark::DoNotOptimize(sources =
+                                 GenerateSources(/*src_num=*/state.range(0),
+                                                 /*src_len=*/state.range(1)));
+    std::vector<double> res;
+    benchmark::DoNotOptimize(res = SolveUsingSortedVector(sources));
   }
 }
 
+std::vector<double> SolveUsingMin(std::vector<std::queue<double>>& data) {
+  std::vector<double> result;
+  result.reserve(data.size() * data[0].size());
+  std::vector<std::queue<double>*> buff;
+  buff.reserve(data.size());
+  for (auto& el : data) {
+    buff.push_back(&el);
+  }
+
+  while (!buff.empty()) {
+    auto it = std::min_element(buff.begin(), buff.end(),
+                               [](const auto* lhs, const auto* rhs) {
+                                 return lhs->front() < rhs->front();
+                               });
+    auto* top = *it;
+    result.push_back(top->front());
+    top->pop();
+    if (top->empty()) {
+      std::swap(*it, buff.back());
+      buff.pop_back();
+    }
+  }
+
+  return result;
+}
+
+static void MinSolutionBM(benchmark::State& state) {
+  for (auto _ : state) {
+    std::vector<std::queue<double>> sources;
+    benchmark::DoNotOptimize(sources =
+                                 GenerateSources(/*src_num=*/state.range(0),
+                                                 /*src_len=*/state.range(1)));
+    std::vector<double> res;
+    benchmark::DoNotOptimize(res = SolveUsingMin(sources));
+  }
+}
+
+#define CASE_VALUES 10, 100, 500
+
 // Register the function as a benchmark
-BENCHMARK(GenerateSourceBM)
-    ->ArgsProduct({{1, 10, 100, 1000}, {1, 10, 100, 1000}});
-BENCHMARK(SetSolutionBM)->ArgsProduct({{1, 10, 100, 1000}, {1, 10, 100, 1000}});
-BENCHMARK(HeapSolutionBM)
-    ->ArgsProduct({{1, 10, 100, 1000}, {1, 10, 100, 1000}});
-BENCHMARK(SortVectorSolutionBM)
-    ->ArgsProduct({{1, 10, 100, 1000}, {1, 10, 100, 1000}});
+BENCHMARK(GenerateSourceBM)->ArgsProduct({{CASE_VALUES}, {CASE_VALUES}});
+BENCHMARK(SetSolutionBM)->ArgsProduct({{CASE_VALUES}, {CASE_VALUES}});
+BENCHMARK(HeapSolutionBM)->ArgsProduct({{CASE_VALUES}, {CASE_VALUES}});
+BENCHMARK(SortVectorSolutionBM)->ArgsProduct({{CASE_VALUES}, {CASE_VALUES}});
+// Very slow!
+// BENCHMARK(MinSolutionBM)->ArgsProduct({{CASE_VALUES}, {CASE_VALUES}});
 
 // Run the benchmark
 BENCHMARK_MAIN();

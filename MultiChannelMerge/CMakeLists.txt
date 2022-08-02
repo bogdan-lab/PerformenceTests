@@ -20,6 +20,7 @@ conan_cmake_run(REQUIRES
 
 add_executable(test
    main.cpp
+   source_generator.cpp
 )
 
 
