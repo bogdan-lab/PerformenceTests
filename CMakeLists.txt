@@ -2,11 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 
 project(PerformanceTests LANGUAGES CXX)
 
-function(generate_target_name output prefix)    
+function(create_benchmark created_target executable_name)
     get_filename_component(dir_name ${CMAKE_CURRENT_SOURCE_DIR} NAME)
     string(TOLOWER ${dir_name} dir_name)
-    string(CONCAT tmp ${prefix} "_" ${dir_name})
-    set(${output} ${tmp} PARENT_SCOPE)
+    string(CONCAT local_target_name ${executable_name} "_" ${dir_name})
+    add_executable(${local_target_name} ${ARGN})
+    set_target_properties(${local_target_name} PROPERTIES OUTPUT_NAME ${executable_name})
+    target_link_libraries(${local_target_name} PRIVATE benchmark::benchmark)
+    set(${created_target} ${local_target_name} PARENT_SCOPE)
 endfunction()
 
 find_package(benchmark REQUIRED)

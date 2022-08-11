@@ -1,8 +1,1 @@
-﻿generate_target_name(target_name "out")
-add_executable(${target_name}
-    main.cpp
-    level_1.cpp
-)
-
-target_link_libraries(${target_name} PRIVATE benchmark::benchmark)
-
+﻿create_benchmark(target_name "out" main.cpp level_1.cpp)
