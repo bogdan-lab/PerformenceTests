@@ -1,6 +1,7 @@
-﻿add_executable(try_catch_test
+﻿generate_target_name(target_name "out")
+add_executable(${target_name}
     main.cpp
 )
 
-target_link_libraries(try_catch_test PRIVATE benchmark::benchmark)
+target_link_libraries(${target_name} PRIVATE benchmark::benchmark)
 

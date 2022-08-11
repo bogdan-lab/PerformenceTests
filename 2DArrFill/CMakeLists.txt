@@ -1,13 +1,12 @@
-﻿
-add_executable(fill_2Darr
+﻿generate_target_name(fill_target_name "fill")
+add_executable(${fill_target_name}
     main.cpp
 )
 
-add_executable(access
+generate_target_name(access_target_name "access")
+add_executable(${access_target_name}
     access.cpp
 )
 
-
-target_link_libraries(fill_2Darr PRIVATE benchmark::benchmark)
-target_link_libraries(access PRIVATE benchmark::benchmark)
-
+target_link_libraries(${fill_target_name} PRIVATE benchmark::benchmark)
+target_link_libraries(${access_target_name} PRIVATE benchmark::benchmark)

@@ -1,16 +1,17 @@
-﻿add_executable(num_ops_in_vec
+﻿generate_target_name(vector_test "vec_test")
+add_executable(vector_test
     main_vec.cpp
 )
 
-target_compile_features(num_ops_in_vec PRIVATE cxx_std_17)
-target_link_libraries(num_ops_in_vec PRIVATE benchmark::benchmark)
+target_compile_features(vector_test PRIVATE cxx_std_17)
+target_link_libraries(vector_test PRIVATE benchmark::benchmark)
 
 
-
-add_executable( num_ops_bare
+generate_target_name(bare_test "bare_test")
+add_executable(${bare_test}
     main_bare.cpp
 )
 
-target_compile_features(num_ops_bare PRIVATE cxx_std_17)
-target_link_libraries(num_ops_bare PRIVATE benchmark::benchmark)
+target_compile_features(${bare_test} PRIVATE cxx_std_17)
+target_link_libraries(${bare_test} PRIVATE benchmark::benchmark)
 

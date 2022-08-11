@@ -6,7 +6,8 @@
 #add_subdirectory(bad_addressing)
 #add_subdirectory(diff_stuff)
 
-add_executable(vec_sum vec_sum.cpp)
+generate_target_name(target_name "out")
+add_executable(${target_name} vec_sum.cpp)
 
-target_link_libraries(vec_sum PRIVATE benchmark::benchmark)
+target_link_libraries(${target_name} PRIVATE benchmark::benchmark)
 

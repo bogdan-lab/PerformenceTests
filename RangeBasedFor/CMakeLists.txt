@@ -1,18 +1,21 @@
-﻿add_executable(rbf_vec
+﻿generate_target_name(vec_case "vec")
+add_executable(${vec_case}
     main_vec.cpp
 )
 
-add_executable(rbf_map
+generate_target_name(map_case "map")
+add_executable(${map_case}
     main_map.cpp
 )
 
-add_executable(rbf_deq
+generate_target_name(deq_case "deq")
+add_executable(${deq_case}
     main_deq.cpp
 )
 
 
 
-target_link_libraries(rbf_vec PRIVATE benchmark::benchmark)
-target_link_libraries(rbf_map PRIVATE benchmark::benchmark)
-target_link_libraries(rbf_deq PRIVATE benchmark::benchmark)
+target_link_libraries(${vec_case} PRIVATE benchmark::benchmark)
+target_link_libraries(${map_case} PRIVATE benchmark::benchmark)
+target_link_libraries(${deq_case} PRIVATE benchmark::benchmark)
 

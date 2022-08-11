@@ -1,19 +1,19 @@
-﻿
-add_executable(shift_bench
+﻿generate_target_name(shift "shift")
+add_executable(${shift}
    shift_bench.cpp
 )
 
-add_executable(rotate_bench
+generate_target_name(rotate "rotate")
+add_executable(${rotate}
     rotate_bench.cpp
 )
 
-add_executable(general
+generate_target_name(general "general")
+add_executable(${general}
     shift_write_get_bench.cpp
 )
 
-target_compile_options( general PRIVATE -fno-omit-frame-pointer)
-
-target_link_libraries(shift_bench PRIVATE benchmark::benchmark)
-target_link_libraries(rotate_bench PRIVATE benchmark::benchmark)
-target_link_libraries(general PRIVATE benchmark::benchmark)
+target_link_libraries(${shift} PRIVATE benchmark::benchmark)
+target_link_libraries(${rotate} PRIVATE benchmark::benchmark)
+target_link_libraries(${general} PRIVATE benchmark::benchmark)
 

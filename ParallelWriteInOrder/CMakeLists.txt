@@ -1,12 +1,14 @@
-﻿add_executable(bench_empty
+﻿generate_target_name(empty "empty")
+add_executable(${empty}
     empty_prints.cpp
 )
 
-add_executable(bench_timed
+generate_target_name(timed "timed")
+add_executable(${timed}
     timed_prints.cpp
 )
 
 
-target_link_libraries(bench_empty PRIVATE benchmark::benchmark)
-target_link_libraries(bench_timed PRIVATE benchmark::benchmark)
+target_link_libraries(${empty} PRIVATE benchmark::benchmark)
+target_link_libraries(${timed} PRIVATE benchmark::benchmark)
 
