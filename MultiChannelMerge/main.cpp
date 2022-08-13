@@ -1,6 +1,7 @@
 ﻿#include <algorithm>
 #include <ctime>
 #include <deque>
+#include <fstream>
 #include <queue>
 #include <random>
 #include <set>
@@ -176,11 +177,18 @@ static void MinSolutionBM(benchmark::State& state) {
 
 #define CASE_VALUES 10, 100, 500
 
+void ReadArgumentsFromConfig(benchmark::internal::Benchmark* b) {
+  std::ifstream input("config.txt");
+  if (!input.is_open()) throw;
+  int source_count, el_count;
+  input >> source_count >> el_count;
+  b->ArgPair(source_count, el_count);
+}
 // Register the function as a benchmark
-BENCHMARK(GenerateSourceBM)->ArgsProduct({{CASE_VALUES}, {CASE_VALUES}});
-BENCHMARK(SetSolutionBM)->ArgsProduct({{CASE_VALUES}, {CASE_VALUES}});
-BENCHMARK(HeapSolutionBM)->ArgsProduct({{CASE_VALUES}, {CASE_VALUES}});
-BENCHMARK(SortVectorSolutionBM)->ArgsProduct({{CASE_VALUES}, {CASE_VALUES}});
+BENCHMARK(GenerateSourceBM)->Apply(ReadArgumentsFromConfig);
+BENCHMARK(SetSolutionBM)->Apply(ReadArgumentsFromConfig);
+BENCHMARK(HeapSolutionBM)->Apply(ReadArgumentsFromConfig);
+BENCHMARK(SortVectorSolutionBM)->Apply(ReadArgumentsFromConfig);
 // Very slow!
 // BENCHMARK(MinSolutionBM)->ArgsProduct({{CASE_VALUES}, {CASE_VALUES}});
 
