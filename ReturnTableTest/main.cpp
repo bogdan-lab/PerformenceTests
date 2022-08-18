@@ -126,7 +126,7 @@ class VectorReturnDataPoint {
     auto it =
         std::lower_bound(details_.begin(), details_.end(), id,
                          [](const auto& p, int id) { return p.first < id; });
-    return it == details_.end() ? 0.0 : it->second;
+    return it != details_.end() && it->first == id ? it->second : 0.0;
   }
 
   double GetValue() const { return value_; }
