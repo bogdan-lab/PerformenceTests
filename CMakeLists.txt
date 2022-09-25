@@ -29,4 +29,4 @@ add_subdirectory(TryCatchTest)
 add_subdirectory(TestingPartition)
 add_subdirectory(TestsWithVectorShiftArmadillo)
 add_subdirectory(ReturnTableTest)
-
+add_subdirectory(GetNthElement)
