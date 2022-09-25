@@ -1,6 +1,8 @@
 #include <algorithm>
+#include <bitset>
 #include <cassert>
 #include <iostream>
+#include <memory>
 #include <random>
 #include <tuple>
 #include <unordered_set>
@@ -177,7 +179,7 @@ static void RadixSortBM(benchmark::State& state) {
   }
 }
 
-int ToInt(const Date& date) {
+constexpr int ToInt(const Date& date) {
   return 10000 * date.Year + 100 * date.Month + date.Day;
 }
 
@@ -237,6 +239,38 @@ static void AlgoSortCompressedBM(benchmark::State& state) {
   }
 }
 
+constexpr int kMaxCompressedValue = ToInt({31, kMaxYearValue, 12});
+
+Date ThirdLatestBitSet(std::vector<Date>& dates) {
+  auto mp = std::make_unique<std::bitset<kMaxCompressedValue + 1>>();
+  int max_val = 0;
+  for (const auto& el : dates) {
+    int curr_val = ToInt(el);
+    mp->set(curr_val);
+    max_val = std::max(curr_val, max_val);
+  }
+  int count = 1;
+  int index = max_val;
+  while (index > 0) {
+    if (mp->test(index - 1)) {
+      ++count;
+    }
+    if (count == 3) break;
+    --index;
+  }
+  return ToDate(index);
+}
+
+static void BitSetBM(benchmark::State& state) {
+  std::mt19937 rnd(42);
+  for (auto _ : state) {
+    std::vector<Date> dates =
+        GenerateDates(rnd, state.range(0), state.range(1));
+    Date res = ThirdLatestBitSet(dates);
+    benchmark::DoNotOptimize(res);
+  }
+}
+
 void PrepareArguments(benchmark::internal::Benchmark* b) {
   std::vector<int> sizes{10, 100, 1000, 10'000, 100'000, 1000'000};
   std::vector<int> duplicates{1, 2, 10, 50, 500, 5000, 50'000, 500'000};
@@ -247,6 +281,11 @@ void PrepareArguments(benchmark::internal::Benchmark* b) {
       }
     }
   }
+  b->ArgPair(10'000'000, 1);
+  b->ArgPair(10'000'000, 2);
+  b->ArgPair(10'000'000, 10);
+  b->ArgPair(10'000'000, 50);
+  b->ArgPair(100'000'000, 1);
 }
 
 BENCHMARK(GenerateDatesBM)->Apply(PrepareArguments);
@@ -255,5 +294,6 @@ BENCHMARK(AlgoSortCompressedBM)->Apply(PrepareArguments);
 BENCHMARK(RadixSortInplaceBM)->Apply(PrepareArguments);
 BENCHMARK(RadixSortBM)->Apply(PrepareArguments);
 BENCHMARK(HashMapBM)->Apply(PrepareArguments);
+BENCHMARK(BitSetBM)->Apply(PrepareArguments);
 
 BENCHMARK_MAIN();
