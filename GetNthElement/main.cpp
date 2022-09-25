@@ -258,7 +258,7 @@ Date ThirdLatestBitSet(std::vector<Date>& dates) {
     if (count == 3) break;
     --index;
   }
-  return ToDate(index);
+  return ToDate(index - 1);
 }
 
 static void BitSetBM(benchmark::State& state) {
