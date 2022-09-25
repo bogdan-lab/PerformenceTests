@@ -177,6 +177,66 @@ static void RadixSortBM(benchmark::State& state) {
   }
 }
 
+int ToInt(const Date& date) {
+  return 10000 * date.Year + 100 * date.Month + date.Day;
+}
+
+Date ToDate(int val) {
+  int y = val / 10000;
+  val -= 10000 * y;
+  int m = val / 100;
+  val -= 100 * m;
+  return {val, y, m};
+}
+
+Date ThirdLatestHashMap(std::vector<Date>& dates) {
+  std::unordered_set<int> filter;
+  filter.reserve(dates.size());
+  for (const auto& el : dates) {
+    filter.insert(ToInt(el));
+  }
+  std::vector<int> unique;
+  unique.reserve(filter.size());
+  for (const auto& el : filter) {
+    unique.push_back(el);
+  }
+  assert(unique.size() >= 3);
+  std::nth_element(unique.begin(), unique.end() - 3, unique.end());
+  return ToDate(*(unique.end() - 3));
+}
+
+static void HashMapBM(benchmark::State& state) {
+  std::mt19937 rnd(42);
+  for (auto _ : state) {
+    std::vector<Date> dates =
+        GenerateDates(rnd, state.range(0), state.range(1));
+    Date res = ThirdLatestHashMap(dates);
+    benchmark::DoNotOptimize(res);
+  }
+}
+
+Date ThirdLatestAlgoSortCompressed(std::vector<Date>& dates) {
+  std::vector<int> compresssed;
+  compresssed.reserve(dates.size());
+  for (const auto& el : dates) {
+    compresssed.push_back(ToInt(el));
+  }
+  std::sort(compresssed.begin(), compresssed.end());
+  auto u_end = std::unique(compresssed.begin(), compresssed.end());
+  assert(u_end - compresssed.begin() >= 3);
+  return ToDate(*(u_end - 3));
+}
+
+static void AlgoSortCompressedBM(benchmark::State& state) {
+  std::mt19937 rnd(42);
+  for (auto _ : state) {
+    std::vector<Date> dates =
+        GenerateDates(rnd, state.range(0), state.range(1));
+    Date res = ThirdLatestAlgoSortCompressed(dates);
+    benchmark::DoNotOptimize(res);
+  }
+}
+
 void PrepareArguments(benchmark::internal::Benchmark* b) {
   std::vector<int> sizes{10, 100, 1000, 10'000, 100'000, 1000'000};
   std::vector<int> duplicates{1, 2, 10, 50, 500, 5000, 50'000, 500'000};
@@ -191,7 +251,9 @@ void PrepareArguments(benchmark::internal::Benchmark* b) {
 
 BENCHMARK(GenerateDatesBM)->Apply(PrepareArguments);
 BENCHMARK(AlgoSortBM)->Apply(PrepareArguments);
+BENCHMARK(AlgoSortCompressedBM)->Apply(PrepareArguments);
 BENCHMARK(RadixSortInplaceBM)->Apply(PrepareArguments);
 BENCHMARK(RadixSortBM)->Apply(PrepareArguments);
+BENCHMARK(HashMapBM)->Apply(PrepareArguments);
 
 BENCHMARK_MAIN();
