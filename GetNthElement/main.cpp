@@ -288,28 +288,6 @@ Date BitDecompress(uint32_t val) {
   return res;
 }
 
-Date ThirdLatestAlgoSortBitCompressed(std::vector<Date>& dates) {
-  std::vector<uint32_t> compresssed;
-  compresssed.reserve(dates.size());
-  for (const auto& el : dates) {
-    compresssed.push_back(BitCompress(el));
-  }
-  std::sort(compresssed.begin(), compresssed.end());
-  auto u_end = std::unique(compresssed.begin(), compresssed.end());
-  assert(u_end - compresssed.begin() >= 3);
-  return BitDecompress(*(u_end - 3));
-}
-
-static void AlgoSortBitCompressedBM(benchmark::State& state) {
-  std::mt19937 rnd(42);
-  for (auto _ : state) {
-    std::vector<Date> dates =
-        GenerateDates(rnd, state.range(0), state.range(1));
-    Date res = ThirdLatestAlgoSortBitCompressed(dates);
-    benchmark::DoNotOptimize(res);
-  }
-}
-
 Date ThirdLatestBitSetBitCompressed(std::vector<Date>& dates) {
   auto mp = std::make_unique<std::bitset<BitCompress({31, 9999, 12}) + 1>>();
   uint32_t max_val = 0;
@@ -360,7 +338,6 @@ void PrepareArguments(benchmark::internal::Benchmark* b) {
 BENCHMARK(GenerateDatesBM)->Apply(PrepareArguments);
 BENCHMARK(AlgoSortBM)->Apply(PrepareArguments);
 BENCHMARK(AlgoSortCompressedBM)->Apply(PrepareArguments);
-BENCHMARK(AlgoSortBitCompressedBM)->Apply(PrepareArguments);
 BENCHMARK(RadixSortInplaceBM)->Apply(PrepareArguments);
 BENCHMARK(RadixSortBM)->Apply(PrepareArguments);
 BENCHMARK(HashMapBM)->Apply(PrepareArguments);
