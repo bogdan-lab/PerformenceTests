@@ -271,6 +271,75 @@ static void BitSetBM(benchmark::State& state) {
   }
 }
 
+constexpr uint32_t BitCompress(Date d) {
+  uint32_t res = 0;
+  res |= (d.Year << 9);
+  res |= (d.Month << 5);
+  res |= d.Day;
+  return res;
+}
+
+Date BitDecompress(uint32_t val) {
+  Date res{0, 0, 0};
+  res.Year = (val >> 9);
+  val %= (1 << 9);
+  res.Month = (val >> 5);
+  res.Day = val % (1 << 5);
+  return res;
+}
+
+Date ThirdLatestAlgoSortBitCompressed(std::vector<Date>& dates) {
+  std::vector<uint32_t> compresssed;
+  compresssed.reserve(dates.size());
+  for (const auto& el : dates) {
+    compresssed.push_back(BitCompress(el));
+  }
+  std::sort(compresssed.begin(), compresssed.end());
+  auto u_end = std::unique(compresssed.begin(), compresssed.end());
+  assert(u_end - compresssed.begin() >= 3);
+  return BitDecompress(*(u_end - 3));
+}
+
+static void AlgoSortBitCompressedBM(benchmark::State& state) {
+  std::mt19937 rnd(42);
+  for (auto _ : state) {
+    std::vector<Date> dates =
+        GenerateDates(rnd, state.range(0), state.range(1));
+    Date res = ThirdLatestAlgoSortBitCompressed(dates);
+    benchmark::DoNotOptimize(res);
+  }
+}
+
+Date ThirdLatestBitSetBitCompressed(std::vector<Date>& dates) {
+  auto mp = std::make_unique<std::bitset<BitCompress({31, 9999, 12}) + 1>>();
+  uint32_t max_val = 0;
+  for (const auto& el : dates) {
+    uint32_t curr_val = BitCompress(el);
+    mp->set(curr_val);
+    max_val = std::max(curr_val, max_val);
+  }
+  int count = 1;
+  int index = max_val;
+  while (index > 0) {
+    if (mp->test(index - 1)) {
+      ++count;
+    }
+    if (count == 3) break;
+    --index;
+  }
+  return BitDecompress(index - 1);
+}
+
+static void BitSetBitCompressedBM(benchmark::State& state) {
+  std::mt19937 rnd(42);
+  for (auto _ : state) {
+    std::vector<Date> dates =
+        GenerateDates(rnd, state.range(0), state.range(1));
+    Date res = ThirdLatestBitSetBitCompressed(dates);
+    benchmark::DoNotOptimize(res);
+  }
+}
+
 void PrepareArguments(benchmark::internal::Benchmark* b) {
   std::vector<int> sizes{10, 100, 1000, 10'000, 100'000, 1000'000};
   std::vector<int> duplicates{1, 2, 10, 50, 500, 5000, 50'000, 500'000};
@@ -291,9 +360,14 @@ void PrepareArguments(benchmark::internal::Benchmark* b) {
 BENCHMARK(GenerateDatesBM)->Apply(PrepareArguments);
 BENCHMARK(AlgoSortBM)->Apply(PrepareArguments);
 BENCHMARK(AlgoSortCompressedBM)->Apply(PrepareArguments);
+BENCHMARK(AlgoSortBitCompressedBM)->Apply(PrepareArguments);
 BENCHMARK(RadixSortInplaceBM)->Apply(PrepareArguments);
 BENCHMARK(RadixSortBM)->Apply(PrepareArguments);
 BENCHMARK(HashMapBM)->Apply(PrepareArguments);
 BENCHMARK(BitSetBM)->Apply(PrepareArguments);
+BENCHMARK(BitSetBitCompressedBM)->Apply(PrepareArguments);
 
 BENCHMARK_MAIN();
+
+// TODO Fix fast solution using bubble sort
+// TODO Fix bitset solution using permutation
