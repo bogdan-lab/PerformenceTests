@@ -318,23 +318,6 @@ static void BitSetBitCompressedBM(benchmark::State& state) {
   }
 }
 
-void PrepareArguments(benchmark::internal::Benchmark* b) {
-  std::vector<int> sizes{10, 100, 1000, 10'000, 100'000, 1000'000};
-  std::vector<int> duplicates{1, 2, 10, 50, 500, 5000, 50'000, 500'000};
-  for (size_t i = 0; i < sizes.size(); ++i) {
-    for (size_t j = 0; j < duplicates.size(); ++j) {
-      if (duplicates[j] < sizes[i]) {
-        b->ArgPair(sizes[i], duplicates[j]);
-      }
-    }
-  }
-  b->ArgPair(10'000'000, 1);
-  b->ArgPair(10'000'000, 2);
-  b->ArgPair(10'000'000, 10);
-  b->ArgPair(10'000'000, 50);
-  b->ArgPair(100'000'000, 1);
-}
-
 Date ThirdLatestBubbleSort(std::vector<Date>& dates) {
   std::vector<uint32_t> compressed;
   compressed.reserve(dates.size());
@@ -365,6 +348,71 @@ static void BubbleSortBM(benchmark::State& state) {
   }
 }
 
+constexpr int kValidDayNum = 32;
+constexpr int kValidMonthNum = 13;
+
+constexpr uint32_t PermutCompressed(Date d) {
+  return d.Year * kValidDayNum * kValidMonthNum + d.Month * kValidDayNum +
+         d.Day;
+}
+
+Date PermutDecompress(uint32_t val) {
+  Date d{0, 0, 0};
+  d.Year = val / (kValidDayNum * kValidMonthNum);
+  val -= d.Year * kValidDayNum * kValidMonthNum;
+  d.Month = val / kValidDayNum;
+  d.Day = val - d.Month * kValidDayNum;
+  return d;
+}
+
+Date ThirdLatestBitSetPermutation(std::vector<Date>& dates) {
+  auto mp =
+      std::make_unique<std::bitset<PermutCompressed(Date{31, 9999, 12}) + 1>>();
+  uint32_t max_val = 0;
+  for (const auto& el : dates) {
+    uint32_t curr_val = PermutCompressed(el);
+    mp->set(curr_val);
+    max_val = std::max(curr_val, max_val);
+  }
+  int count = 1;
+  uint32_t index = max_val;
+  while (index > 0) {
+    if (mp->test(index - 1)) {
+      ++count;
+    }
+    if (count == 3) break;
+    --index;
+  }
+  return PermutDecompress(index - 1);
+}
+
+static void BitSetPermutCompressedBM(benchmark::State& state) {
+  std::mt19937 rnd(42);
+  for (auto _ : state) {
+    std::vector<Date> dates =
+        GenerateDates(rnd, state.range(0), state.range(1));
+    Date res = ThirdLatestBitSetPermutation(dates);
+    benchmark::DoNotOptimize(res);
+  }
+}
+
+void PrepareArguments(benchmark::internal::Benchmark* b) {
+  std::vector<int> sizes{10, 100, 1000, 10'000, 100'000, 1000'000};
+  std::vector<int> duplicates{1, 2, 10, 50, 500, 5000, 50'000, 500'000};
+  for (size_t i = 0; i < sizes.size(); ++i) {
+    for (size_t j = 0; j < duplicates.size(); ++j) {
+      if (duplicates[j] < sizes[i]) {
+        b->ArgPair(sizes[i], duplicates[j]);
+      }
+    }
+  }
+  b->ArgPair(10'000'000, 1);
+  b->ArgPair(10'000'000, 2);
+  b->ArgPair(10'000'000, 10);
+  b->ArgPair(10'000'000, 50);
+  b->ArgPair(100'000'000, 1);
+}
+
 BENCHMARK(GenerateDatesBM)->Apply(PrepareArguments);
 BENCHMARK(AlgoSortBM)->Apply(PrepareArguments);
 BENCHMARK(AlgoSortCompressedBM)->Apply(PrepareArguments);
@@ -374,7 +422,6 @@ BENCHMARK(RadixSortBM)->Apply(PrepareArguments);
 BENCHMARK(HashMapBM)->Apply(PrepareArguments);
 BENCHMARK(BitSetBM)->Apply(PrepareArguments);
 BENCHMARK(BitSetBitCompressedBM)->Apply(PrepareArguments);
+BENCHMARK(BitSetPermutCompressedBM)->Apply(PrepareArguments);
 
 BENCHMARK_MAIN();
-
-// TODO Fix bitset solution using permutation
