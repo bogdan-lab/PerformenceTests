@@ -335,9 +335,40 @@ void PrepareArguments(benchmark::internal::Benchmark* b) {
   b->ArgPair(100'000'000, 1);
 }
 
+Date ThirdLatestBubbleSort(std::vector<Date>& dates) {
+  std::vector<uint32_t> compressed;
+  compressed.reserve(dates.size());
+  for (const auto& el : dates) {
+    compressed.push_back(BitCompress(el));
+  }
+  int8_t count = 1;
+  std::swap(*std::max_element(compressed.begin(), compressed.end()),
+            compressed.back());
+
+  auto last = std::prev(compressed.end());
+  while (count < 3) {
+    auto it = std::max_element(compressed.begin(), last);
+    count += (*it != *last);
+    --last;
+    std::swap(*it, *last);
+  }
+  return BitDecompress(*last);
+}
+
+static void BubbleSortBM(benchmark::State& state) {
+  std::mt19937 rnd(42);
+  for (auto _ : state) {
+    std::vector<Date> dates =
+        GenerateDates(rnd, state.range(0), state.range(1));
+    Date res = ThirdLatestBubbleSort(dates);
+    benchmark::DoNotOptimize(res);
+  }
+}
+
 BENCHMARK(GenerateDatesBM)->Apply(PrepareArguments);
 BENCHMARK(AlgoSortBM)->Apply(PrepareArguments);
 BENCHMARK(AlgoSortCompressedBM)->Apply(PrepareArguments);
+BENCHMARK(BubbleSortBM)->Apply(PrepareArguments);
 BENCHMARK(RadixSortInplaceBM)->Apply(PrepareArguments);
 BENCHMARK(RadixSortBM)->Apply(PrepareArguments);
 BENCHMARK(HashMapBM)->Apply(PrepareArguments);
@@ -346,5 +377,4 @@ BENCHMARK(BitSetBitCompressedBM)->Apply(PrepareArguments);
 
 BENCHMARK_MAIN();
 
-// TODO Fix fast solution using bubble sort
 // TODO Fix bitset solution using permutation
